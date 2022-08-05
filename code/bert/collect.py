@@ -162,7 +162,11 @@ def main():
     localRank = int(args['--localRank'])
     with open(args['<modelConfig>'], 'r', encoding='utf-8') as f_in:
         modelConfig = f_in.readline().split()
-        modelName, nLayers, nDims = modelConfig[0], int(modelConfig[1]), int(modelConfig[2])
+        if len(modelConfig) == 3:
+            modelName, nLayers, nDims = modelConfig[0], int(modelConfig[1]), int(modelConfig[2])
+            tokenizerName = modelName
+        else:
+            tokenizerName, modelName, nLayers, nDims = modelConfig[0], modelConfig[1], int(modelConfig[2]), int(modelConfig[3])
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
     logging.info(__file__.upper())
@@ -216,7 +220,7 @@ def main():
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
 
     # Load model and tokenizer
-    tokenizer = BertTokenizer.from_pretrained(modelName, never_split=targets)
+    tokenizer = BertTokenizer.from_pretrained(tokenizerName, never_split=targets)
     model = BertModel.from_pretrained(modelName, output_hidden_states=True)
 
     if localRank == 0:
